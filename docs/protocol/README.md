@@ -32,6 +32,7 @@
 | 研讨室预约 | [cgyy.md](parity/cgyy.md) | 场馆查询、订单详情身份、收据与写入边界 |
 | 直接写操作与评教 | [write-actions.md](parity/write-actions.md) | 各写入九列、typed 操作资格、评教提交信封及多业务 DTO 原语补充 |
 | 门户、账户指标与财务 | [campus.md](parity/campus.md) | 门户资料、账户指标、网费流量、财务收入 |
+| 校园卡充值 | [campus-card.md](parity/campus-card.md) | 航财通、数币钱包、订单冲突与支付回读 |
 | iHome | [ihome.md](parity/ihome.md) | 补充旧版来源、逐操作协议、界面调整 |
 | 北航云盘 | [bhpan.md](parity/bhpan.md) | 认证、读取、写入、分享、传输、日程固定文件版本条件 |
 | 应用服务 | [app-service.md](parity/app-service.md) | 遥测、更新、公告与统计开关（非学校协议） |

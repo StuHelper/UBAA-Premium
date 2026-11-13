@@ -19,6 +19,7 @@ abstract interface class RequiredSessionBackend {
 /// 命令与 GUI 共用的恢复目标，覆盖不在底栏菜单中的只读服务。
 enum RecoveryTarget {
   bhpan,
+  campusCard,
   user,
   portal,
   network,
@@ -47,6 +48,7 @@ enum RecoveryTarget {
     finance ||
     ihome ||
     bhpan ||
+    campusCard ||
     connection => null,
     _ => FeatureId.values.byName(name),
   };

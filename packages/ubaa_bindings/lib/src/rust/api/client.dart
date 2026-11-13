@@ -10,6 +10,7 @@ import 'app_service.dart';
 import 'bhpan.dart';
 import 'bhpan/models.dart';
 import 'campus.dart';
+import 'campus_card.dart';
 import 'cloud_print.dart';
 import 'command.dart';
 import 'finance.dart';
@@ -379,6 +380,15 @@ abstract class BridgeClient implements RustOpaqueInterface {
     required BridgeOfflineCache cache,
     required BridgeCampusCacheQuery query,
   });
+
+  Future<int> campusCardBalance();
+
+  Future<BridgeCampusCardPayment> campusCardRecharge({
+    required int cents,
+    required String wallet,
+  });
+
+  Future<List<String>> campusCardWallets();
 
   /// 在线读取五项校园账户指标；单项失败保留在对应项中。
   Future<BridgeCampusMetricsResult> campusMetrics();

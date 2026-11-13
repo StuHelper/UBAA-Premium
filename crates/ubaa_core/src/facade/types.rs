@@ -59,6 +59,7 @@ impl std::error::Error for RoutedError {
 
 #[derive(Clone, Copy)]
 pub(super) enum Operation {
+    CampusCard,
     Bhpan,
     CloudPrint,
     Authentication,

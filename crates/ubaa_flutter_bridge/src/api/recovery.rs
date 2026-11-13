@@ -51,6 +51,7 @@ impl BridgeClient {
 #[derive(Clone, Copy, Debug)]
 pub enum BridgeRecoveryFeature {
     Bhpan,
+    CampusCard,
     User,
     Portal,
     Network,
@@ -73,7 +74,7 @@ pub enum BridgeRecoveryFeature {
 impl BridgeRecoveryFeature {
     pub(crate) fn feature(self) -> Option<ReadonlyFeature> {
         Some(match self {
-            Self::User | Self::Bhpan | Self::Connection => return None,
+            Self::User | Self::Bhpan | Self::CampusCard | Self::Connection => return None,
             Self::Portal => ReadonlyFeature::Portal,
             Self::Network => ReadonlyFeature::Network,
             Self::Finance => ReadonlyFeature::Finance,
@@ -116,6 +117,7 @@ impl BridgeClient {
             self.ensure_recovery_allowed().await?;
             let recovered = match feature {
                 BridgeRecoveryFeature::Bhpan => client.recover_bhpan_session().await,
+                BridgeRecoveryFeature::CampusCard => client.recover_campus_card_session().await,
                 BridgeRecoveryFeature::Connection => client.recover_connection_session().await,
                 _ => match feature.feature() {
                     Some(feature) => client.recover_required_session(feature).await,

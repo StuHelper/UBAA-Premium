@@ -52,121 +52,141 @@ class HomeTodoCard extends StatelessWidget {
         item.soon ||
         (item.deadline != null &&
             item.deadline!.difference(now) < const Duration(days: 3));
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: item.feature == FeatureId.signin
-            ? (signing ? null : onSignin ?? onRefreshSignin)
-            : item.navigation == null
-            ? null
-            : onTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // 元信息行：来源、课程或地点、非“待××”状态；标题单独占行。
-                        Row(
-                          children: [
-                            UiTag(
-                              uiHomeFeatureLabel(item.feature),
-                              icon: uiFeatureIcon(item.feature),
-                              tone: UiTagTone.primary,
-                            ),
-                            if (subtitle.isNotEmpty) ...[
-                              const SizedBox(width: 8),
-                              Flexible(
-                                // 不截断：窄屏大字时课程名或地点换行保留全文。
-                                child: Text(
-                                  subtitle,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
-                            ],
-                            if (moreCount > 0) ...[
-                              const SizedBox(width: 6),
-                              UiTag('另有 $moreCount 项'),
-                            ],
-                            // “待××”与时间信息重复，不显示。
-                            if (!status.startsWith('待')) ...[
-                              const SizedBox(width: 6),
-                              UiTag(status),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          item.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                      ],
-                    ),
-                    Text.rich(
-                      TextSpan(
-                        text: item.timeLabel,
-                        children: [
-                          if (remaining != null)
-                            TextSpan(
-                              text: ' · $remaining',
-                              style: TextStyle(
-                                color: urgent
-                                    ? null
-                                    : theme.colorScheme.onSurfaceVariant,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                        ],
-                      ),
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: urgent
-                            ? UbaaTheme.warning(theme.colorScheme)
-                            : theme.colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (item.feature == FeatureId.signin) ...[
-                const SizedBox(width: 8),
-                Center(
-                  child: FilledButton(
-                    onPressed: signing ? null : onSignin ?? onRefreshSignin,
-                    child: Text(
-                      signing
-                          ? '处理中…'
-                          : onSignin != null
-                          ? '签到'
-                          : '刷新状态',
-                    ),
-                  ),
-                ),
-              ] else if (item.navigation != null)
-                Icon(
-                  Icons.chevron_right,
+    return HomeTodoCardFrame(
+      onTap: item.feature == FeatureId.signin
+          ? (signing ? null : onSignin ?? onRefreshSignin)
+          : item.navigation == null
+          ? null
+          : onTap,
+      title: item.title,
+      metadata: Row(
+        children: [
+          UiTag(
+            uiHomeFeatureLabel(item.feature),
+            icon: uiFeatureIcon(item.feature),
+            tone: UiTagTone.primary,
+          ),
+          if (subtitle.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            Flexible(
+              // 不截断：窄屏大字时课程名或地点换行保留全文。
+              child: Text(
+                subtitle,
+                style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
-            ],
-          ),
+              ),
+            ),
+          ],
+          if (moreCount > 0) ...[
+            const SizedBox(width: 6),
+            UiTag('另有 $moreCount 项'),
+          ],
+          // “待××”与时间信息重复，不显示。
+          if (!status.startsWith('待')) ...[
+            const SizedBox(width: 6),
+            UiTag(status),
+          ],
+        ],
+      ),
+      detail: Text.rich(
+        TextSpan(
+          text: item.timeLabel,
+          children: [
+            if (remaining != null)
+              TextSpan(
+                text: ' · $remaining',
+                style: TextStyle(
+                  color: urgent ? null : theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+          ],
+        ),
+        style: theme.textTheme.labelLarge?.copyWith(
+          color: urgent
+              ? UbaaTheme.warning(theme.colorScheme)
+              : theme.colorScheme.onPrimaryContainer,
         ),
       ),
+      trailing: item.feature == FeatureId.signin
+          ? Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: FilledButton(
+                onPressed: signing ? null : onSignin ?? onRefreshSignin,
+                child: Text(
+                  signing
+                      ? '处理中…'
+                      : onSignin != null
+                      ? '签到'
+                      : '刷新状态',
+                ),
+              ),
+            )
+          : item.navigation != null
+          ? Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant)
+          : null,
     );
   }
+}
+
+/// 待办网格内的共用卡片布局，也可显示没有日程的提醒。
+class HomeTodoCardFrame extends StatelessWidget {
+  const HomeTodoCardFrame({
+    super.key,
+    required this.title,
+    required this.metadata,
+    required this.detail,
+    this.trailing,
+    this.onTap,
+  });
+
+  final String title;
+  final Widget metadata, detail;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      metadata,
+                      const SizedBox(height: 4),
+                      Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 2),
+                    ],
+                  ),
+                  detail,
+                ],
+              ),
+            ),
+            if (trailing case final action?) Center(child: action),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 /// 截止时间的相对说法（“还有 3 天”）；没有截止时间或已过期时为空。

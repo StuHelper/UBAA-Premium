@@ -7,6 +7,7 @@ import 'features/finance/service.dart';
 import 'features/campus/service.dart';
 import 'features/bhpan/service.dart';
 import 'features/cloud_print.dart';
+import 'features/campus_card.dart';
 import 'package:ubaa_domain/ubaa_domain.dart';
 import 'package:ubaa_platform/ubaa_platform.dart';
 import 'package:ubaa_app/src/contracts/backend.dart';
@@ -200,6 +201,32 @@ class AppController extends ControllerState
   }
 
   CampusAccountService? _campusService;
+  (UbaaBackend, int, CampusCardService)? _campusCard;
+
+  CampusCardService? get campusCardService {
+    final backend = internalBackend;
+    if (backend is! CampusCardProvider) return null;
+    final epoch = internalLifecycleEpoch;
+    final cached = _campusCard;
+    if (cached != null && identical(cached.$1, backend) && cached.$2 == epoch) {
+      return cached.$3;
+    }
+    final service = ScopedCampusCardService(
+      (backend as CampusCardProvider).campusCard,
+      () =>
+          !internalDisposed &&
+          !internalIsSigningOut &&
+          !internalInteractiveEngaged &&
+          internalPhase == AppPhase.home &&
+          internalLifecycleEpoch == epoch &&
+          identical(internalBackend, backend),
+      internalReadService,
+      internalWriteCoordinator,
+    );
+    _campusCard = (backend, epoch, service);
+    return service;
+  }
+
   ScopedCloudPrintService? _cloudPrintService;
   UbaaBackend? _cloudPrintBackend;
   int? _cloudPrintEpoch;

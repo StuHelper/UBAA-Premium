@@ -7,6 +7,7 @@ import 'finance/service.dart';
 import 'campus/service.dart';
 import 'bhpan/service.dart';
 import 'cloud_print.dart';
+import 'campus_card.dart';
 import 'write/pinned_readback.dart';
 import 'package:ubaa_bindings/ubaa_bindings.dart';
 import 'package:ubaa_domain/ubaa_domain.dart';
@@ -101,6 +102,7 @@ class BridgeBackend
         CampusAccountBackend,
         BhpanProvider,
         CloudPrintProvider,
+        CampusCardProvider,
         PinnedWriteReadbackBackend,
         InteractiveLoginBackend,
         ManualCaptchaBackend,
@@ -407,6 +409,8 @@ class BridgeBackend
 
   @override
   late final CloudPrintService cloudPrint = BridgeCloudPrintService(_context);
+  @override
+  late final CampusCardService campusCard = BridgeCampusCardService(_context);
   @override
   late final CampusAccountService campusAccount = BridgeCampusAccountService(
     _context,

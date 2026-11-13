@@ -155,7 +155,10 @@ fn domains(operation: Operation) -> &'static [&'static str] {
     match operation {
         Operation::User => &["uc.buaa.edu.cn"],
         Operation::CloudPrint => &[crate::features::cloud_print::HOST],
-        Operation::Bhpan | Operation::Authentication | Operation::ConnectionRecovery => &[],
+        Operation::Bhpan
+        | Operation::CampusCard
+        | Operation::Authentication
+        | Operation::ConnectionRecovery => &[],
         Operation::Feature(feature) => match feature {
             ReadonlyFeature::Schedule | ReadonlyFeature::Exam | ReadonlyFeature::Grades => {
                 &["byxt.buaa.edu.cn", "gsmis.buaa.edu.cn"]

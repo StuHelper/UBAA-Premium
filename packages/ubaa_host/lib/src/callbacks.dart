@@ -135,6 +135,24 @@ extension _UbaaAppHostCallbacks on _UbaaAppHostState {
       ihomeService: _controller.ihomeService,
       financeService: _controller.financeService,
       campusAccountService: _controller.campusAccountService,
+      campusCardService: _controller.campusCardService,
+      onReadCampusCardSettings: localOwner.accountKey.isEmpty
+          ? null
+          : () async {
+              localOwner.checkCurrent();
+              final value = await _campusCardPreferences.read(
+                localOwner.accountKey,
+              );
+              localOwner.checkCurrent();
+              return value;
+            },
+      onSaveCampusCardSettings: localOwner.accountKey.isEmpty
+          ? null
+          : (value) async {
+              localOwner.checkCurrent();
+              await _campusCardPreferences.write(localOwner.accountKey, value);
+              localOwner.checkCurrent();
+            },
       bhpanService: _controller.bhpanService,
       cloudPrintService: _controller.cloudPrintService,
       onPickPrintFiles: const SystemCloudPrintFiles().pick,

@@ -2,24 +2,6 @@ part of 'shell.dart';
 
 /// 自适应导航的展示；页面与写入状态由 Shell 持有。
 extension UbaaShellNavigation on _UbaaMainShellState {
-  Widget _withRefreshShortcuts(
-    Widget shell,
-    Future<void> Function()? refreshPage,
-  ) {
-    // 桌面快捷键的父层级保持稳定，切页时只调整可用的绑定。
-    void refresh() => unawaited(refreshPage?.call());
-    return CallbackShortcuts(
-      bindings: {
-        if (refreshPage != null)
-          const SingleActivator(LogicalKeyboardKey.keyR, meta: true): refresh,
-        if (refreshPage != null)
-          const SingleActivator(LogicalKeyboardKey.keyR, control: true):
-              refresh,
-      },
-      child: Focus(autofocus: true, child: shell),
-    );
-  }
-
   void _goBack() {
     if (_utilityPage == '北航云盘' && _bhpanBack.handleBack()) return;
     if (_utilityPage != null) {
@@ -87,7 +69,21 @@ extension UbaaShellNavigation on _UbaaMainShellState {
 
   /// 手机上首页、三个分类与“我的”可左右滑动切换；各页保留状态。
   Widget _buildTab(BuildContext context) => _utilityPage != null
-      ? _utilityPage == '图书馆云打印'
+      ? _utilityPage == '校园卡充值'
+            ? CampusCardView(
+                key: ValueKey(_pageContentScope),
+                service: widget.connecting ? null : widget.campusCardService,
+                settings: _campusCard.settings,
+                paying: _campusCard.paying,
+                message: _campusCard.message,
+                needsReview: _campusCard.needsReview,
+                onSave: widget.onSaveCampusCardSettings == null
+                    ? null
+                    : _campusCard.save,
+                onRecharge: _campusCard.recharge,
+                onReview: () => _campusCard.confirmReview(context),
+              )
+            : _utilityPage == '图书馆云打印'
             ? CloudPrintView(
                 key: ValueKey((
                   _pageContentScope,
@@ -200,6 +196,7 @@ extension UbaaShellNavigation on _UbaaMainShellState {
               },
             ),
       appNotices: widget.appNotices,
+      campusCardReminder: _campusCard.reminder(() => _openUtility('校园卡充值')),
       gradeScoreNotice: widget.gradeScoreNotice,
       gradeCheckRoute: widget.gradeCheckRoute,
       onOpenGradeNotice: _openGradeNotice,
@@ -210,8 +207,7 @@ extension UbaaShellNavigation on _UbaaMainShellState {
       onObserveProgress: _observeHomeProgress,
       onFeatureTap: _openFeatureList,
       onRetryFeature: widget.onRetryHomeSource ?? widget.onRetryFeature,
-      onRefresh: () =>
-          _joinRefresh('home', widget.onRefreshHome ?? widget.onRefresh),
+      onRefresh: _refreshHome,
     ),
     2 => AgendaView(
       signedIn: widget.user != null || widget.cacheAccountId != null,
@@ -247,6 +243,11 @@ extension UbaaShellNavigation on _UbaaMainShellState {
       onSaveFile: widget.agenda.saveFile,
     ),
     1 || 3 => FeatureGridView(
+      onOpenCampusCard:
+          index == UiDestination.campus.index &&
+              widget.campusCardService != null
+          ? () => _openUtility('校园卡充值')
+          : null,
       onOpenCloudPrint:
           index == UiDestination.campus.index &&
               widget.cloudPrintService != null
@@ -480,8 +481,12 @@ extension UbaaShellNavigation on _UbaaMainShellState {
       joinUiRefresh(_refreshes, key, action);
 
   /// 标题栏按钮与快捷键走首页自身的刷新，补充来源一起重读。
-  Future<void> _refreshHome() =>
-      _joinRefresh('home', widget.onRefreshHome ?? widget.onRefresh);
+  Future<void> _refreshHome() => _joinRefresh('home', () async {
+    await Future.wait([
+      (widget.onRefreshHome ?? widget.onRefresh)(),
+      _campusCard.refresh(),
+    ]);
+  });
 
   Future<void> _importAgendaSchedule() => importAgendaSchedule(
     context,

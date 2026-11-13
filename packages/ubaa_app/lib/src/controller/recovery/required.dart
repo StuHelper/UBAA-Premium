@@ -125,6 +125,9 @@ mixin ControllerRequiredRecovery on ControllerState {
         credentials == internalLoginCredentialRevision &&
         !internalRoutePolicyInFlight;
     final store = internalLocalAccountStore;
+    final recoveryRoutePolicy = target == RecoveryTarget.campusCard
+        ? RoutePolicy.direct
+        : internalLoginForm.routePolicy;
     final scope = store is SecureLocalAccountStore
         ? await RecoveryScope.capture(
             accounts: store,
@@ -132,7 +135,7 @@ mixin ControllerRequiredRecovery on ControllerState {
             routeGeneration: routeGeneration,
             backendGeneration: epoch,
             credentialGeneration: credentials,
-            routePolicy: internalLoginForm.routePolicy,
+            routePolicy: recoveryRoutePolicy,
             allowAutomaticLogin:
                 account != null &&
                 !internalAutomaticCredentialBlocked &&
@@ -149,7 +152,7 @@ mixin ControllerRequiredRecovery on ControllerState {
             routeGeneration: routeGeneration,
             backendGeneration: epoch,
             credentialGeneration: credentials,
-            routePolicy: internalLoginForm.routePolicy,
+            routePolicy: recoveryRoutePolicy,
             allowAutomaticLogin:
                 account != null &&
                 !internalAutomaticCredentialBlocked &&

@@ -6,6 +6,8 @@ import '../shared/layout/connection_status.dart' show UiConnectionStatusButton;
 import '../features/bhpan/write_flow.dart';
 import '../features/bhpan/view.dart';
 import '../features/cloud_print/view.dart';
+import '../features/campus_card/view.dart';
+import '../features/campus_card/home.dart';
 import '../features/agenda/view.dart';
 import '../features/agenda/format.dart' show campusDate, AgendaAccess;
 import '../shared/tab_navigation.dart'
@@ -18,7 +20,6 @@ import '../shared/app_bar_slot.dart' show UiAppBarSlot;
 import '../shared/layout/page_transition.dart' show UiPageTransition;
 import '../shared/loading.dart' show UiBusyRegistry, UiBusyScope;
 import '../shared/place_memory.dart' show UiPlaceMemory, UiPlaceKeys;
-import 'package:flutter/services.dart';
 import 'package:ubaa_domain/ubaa_domain.dart';
 import 'package:ubaa_ui/src/write_callbacks.dart';
 import '../shared/sync_status.dart'
@@ -30,6 +31,8 @@ import 'about.dart' show AboutView;
 import 'home.dart' show FeatureGridView, HomeView, HomeViewState;
 import 'destination.dart';
 import '../features/home/shell_helpers.dart';
+import '../features/home/feature_stack.dart';
+import '../features/home/refresh_shortcuts.dart';
 import '../theme.dart';
 import 'account/me.dart' show MeView;
 import 'profile.dart' show ProfileView;
@@ -66,6 +69,9 @@ class UbaaMainShell extends StatefulWidget {
     this.campusAccountService,
     this.bhpanService,
     this.cloudPrintService,
+    this.campusCardService,
+    this.onReadCampusCardSettings,
+    this.onSaveCampusCardSettings,
     this.onPickPrintFiles,
     this.onPickPrintFolder,
     this.onPreviewScanPdf,
@@ -189,6 +195,9 @@ class UbaaMainShell extends StatefulWidget {
   final CampusAccountService? campusAccountService;
   final BhpanService? bhpanService;
   final CloudPrintService? cloudPrintService;
+  final CampusCardService? campusCardService;
+  final Future<CampusCardSettings?> Function()? onReadCampusCardSettings;
+  final Future<void> Function(CampusCardSettings)? onSaveCampusCardSettings;
   final Future<List<PrintSource>> Function()? onPickPrintFiles;
   final Future<PrintDownloadFolder?> Function(bool Function())?
   onPickPrintFolder;
@@ -276,6 +285,7 @@ class UbaaMainShell extends StatefulWidget {
 }
 
 class _UbaaMainShellState extends State<UbaaMainShell> {
+  late final _campusCard = CampusCardHome(() => setState(() {}));
   // 页面内容只随账号、路线策略和明确清理变化；网络请求代次独立推进。
   int _contentEpoch = 0;
   Object get _pageContentScope => (
@@ -355,6 +365,7 @@ class _UbaaMainShellState extends State<UbaaMainShell> {
   @override
   void initState() {
     super.initState();
+    _updateCampusCard();
     _selectedIndex = widget.initialDestination.index;
     _tabPager = PageController(keepPage: false);
     unawaited(_loadReminderSettings());
@@ -386,6 +397,7 @@ class _UbaaMainShellState extends State<UbaaMainShell> {
         oldWidget.routePolicy != widget.routePolicy ||
         oldWidget.businessCacheEpoch != widget.businessCacheEpoch;
     if (contentChanged) _contentEpoch++;
+    _updateCampusCard(reset: contentChanged, accountChanged: accountChanged);
     _updatePlaces(oldWidget, accountChanged);
     if (accountChanged ||
         oldWidget.routePolicy != widget.routePolicy ||
@@ -533,8 +545,20 @@ class _UbaaMainShellState extends State<UbaaMainShell> {
     });
   }
 
+  void _updateCampusCard({bool reset = false, bool accountChanged = false}) =>
+      _campusCard.update(
+        service: widget.campusCardService,
+        portal: widget.campusAccountService,
+        readSettings: widget.onReadCampusCardSettings,
+        saveSettings: widget.onSaveCampusCardSettings,
+        connecting: widget.connecting,
+        reset: reset,
+        accountChanged: accountChanged,
+      );
+
   @override
   void dispose() {
+    _campusCard.dispose();
     _campusLoader.dispose();
     _bhpanModalScope.value++;
     _bhpanModalScope.dispose();
@@ -555,21 +579,12 @@ class _UbaaMainShellState extends State<UbaaMainShell> {
     const maxContentWidth = UbaaTheme.pageMaxWidth;
     if (_openedFeature case final feature?) _visitedFeatures.add(feature);
     final pages = _visitedFeatures.toList(growable: false);
-    final body = IndexedStack(
-      key: ValueKey<int>(_accountGeneration),
-      index: _openedFeature == null ? 0 : pages.indexOf(_openedFeature!) + 1,
-      children: <Widget>[
-        TickerMode(enabled: _openedFeature == null, child: _buildTab(context)),
-        for (final feature in pages)
-          TickerMode(
-            key: ValueKey<FeatureId>(feature),
-            enabled: _openedFeature == feature,
-            child: TooltipVisibility(
-              visible: _openedFeature == feature,
-              child: _buildFeaturePage(feature),
-            ),
-          ),
-      ],
+    final body = buildFeatureStack(
+      generation: _accountGeneration,
+      active: _openedFeature,
+      pages: pages,
+      tab: _buildTab(context),
+      buildPage: _buildFeaturePage,
     );
     final touchRefresh = uiIsTouchPlatform(context);
     final refreshPage = _openedFeature != null
@@ -752,7 +767,7 @@ class _UbaaMainShellState extends State<UbaaMainShell> {
               ),
       ),
     );
-    return touchRefresh ? shell : _withRefreshShortcuts(shell, refreshPage);
+    return touchRefresh ? shell : withRefreshShortcuts(shell, refreshPage);
   }
 
   final _refreshes = <Object, Future<void>>{};

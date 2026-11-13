@@ -13,6 +13,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 /// 当前任务需要校验的业务路线；Auto 仍由 Core 功能矩阵决定。
 enum BridgeRecoveryFeature {
   bhpan,
+  campusCard,
   user,
   portal,
   network,

@@ -15,6 +15,7 @@ import 'api/bhpan.dart';
 import 'api/bhpan/models.dart';
 import 'api/cache_management.dart';
 import 'api/campus.dart';
+import 'api/campus_card.dart';
 import 'api/client.dart';
 import 'api/cloud_print.dart';
 import 'api/command.dart';
@@ -1723,6 +1724,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BridgeCampusCacheQuery dco_decode_bridge_campus_cache_query(dynamic raw);
+
+  @protected
+  BridgeCampusCardPayment dco_decode_bridge_campus_card_payment(dynamic raw);
 
   @protected
   BridgeCampusCountMetric dco_decode_bridge_campus_count_metric(dynamic raw);
@@ -5261,6 +5265,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BridgeCampusCacheQuery sse_decode_bridge_campus_cache_query(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  BridgeCampusCardPayment sse_decode_bridge_campus_card_payment(
     SseDeserializer deserializer,
   );
 
@@ -9656,6 +9665,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_bridge_campus_cache_query(
     BridgeCampusCacheQuery self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_bridge_campus_card_payment(
+    BridgeCampusCardPayment self,
     SseSerializer serializer,
   );
 

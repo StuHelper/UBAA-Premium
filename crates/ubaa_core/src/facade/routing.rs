@@ -306,6 +306,7 @@ impl UbaaClient {
             resolution: None,
         })?;
         let (policy, row) = match operation {
+            Operation::CampusCard => (RoutePolicy::Direct, FeatureRouteConfig::SAFE_DEFAULT),
             Operation::Authentication
             | Operation::ConnectionRecovery
             | Operation::User
@@ -531,6 +532,53 @@ const fn alternate_route(route: ConnectionMode) -> ConnectionMode {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(feature = "test-contract")]
+    #[test]
+    fn campus_card_recovery_needs_direct_even_when_portal_is_on_webvpn() {
+        use crate::connection::{GatewayProbe, NetworkState};
+        use crate::ports::{HttpRequest, HttpResponse, HttpTransport};
+        use crate::session::FileSessionStore;
+
+        struct Unused;
+        #[async_trait::async_trait]
+        impl HttpTransport for Unused {
+            async fn execute(&self, _: HttpRequest) -> Result<HttpResponse> {
+                panic!("本用例不执行联网请求");
+            }
+        }
+        impl GatewayProbe for Unused {
+            fn probe(&self, _: std::time::Duration) -> NetworkState {
+                panic!("显式路线不应探测校园网");
+            }
+        }
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../.ubaa_local/campus_card/tests")
+            .join(uuid::Uuid::new_v4().to_string());
+        let mut config = crate::config::RouteConfig::default();
+        config.replace_default_policy(RoutePolicy::WebVpn);
+        let mut client = UbaaClient::with_routing(
+            Unused,
+            Unused,
+            FileSessionStore::new(&root).unwrap(),
+            config,
+            Unused,
+        )
+        .unwrap();
+        for (operation, mode) in [
+            (Operation::CampusCard, ConnectionMode::Direct),
+            (
+                Operation::Feature(ReadonlyFeature::Portal),
+                ConnectionMode::WebVpn,
+            ),
+        ] {
+            let error = client.resolve_recovery_operation(operation).unwrap_err();
+            assert_eq!(error.error.code, ErrorCode::AuthenticationRequired);
+            assert_eq!(error.resolution().unwrap().mode, mode);
+        }
+        drop(client);
+        std::fs::remove_dir_all(root).unwrap();
+    }
 
     #[test]
     fn explicit_invalidation_clears_but_timeout_and_server_errors_preserve_session() {

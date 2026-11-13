@@ -30,6 +30,7 @@ class HomeView extends StatefulWidget {
     this.onOpenGradeNotice,
     this.onDismissGradeNotice,
     this.writeReadbackNotice,
+    this.campusCardReminder,
     this.appNotices,
     this.homeClock,
     this.onViewAllTodos,
@@ -49,6 +50,7 @@ class HomeView extends StatefulWidget {
   final ConnectionMode? gradeCheckRoute;
   final VoidCallback? onOpenGradeNotice, onDismissGradeNotice, onViewAllTodos;
   final Widget? writeReadbackNotice;
+  final Widget? campusCardReminder;
 
   /// 应用服务的更新与公告横幅，排在首页最前。
   final AppServiceNotices? appNotices;
@@ -212,13 +214,14 @@ class HomeViewState extends State<HomeView> {
         preview.add((task, 0));
       }
     }
+    final hasTodoCards = tasks.isNotEmpty || widget.campusCardReminder != null;
     Widget todoSection(int limit) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // 与课表同一分节标题；刷新状态统一显示在标题栏右侧。
         UiSectionHeader(
           title: '待办',
-          subtitle: tasks.isEmpty ? '近期截止与提醒' : null,
+          subtitle: hasTodoCards ? null : '近期截止与提醒',
           trailing: tasks.length > limit || preview.length < tasks.length
               ? TextButton(
                   key: const ValueKey('home-todos-toggle'),
@@ -234,6 +237,7 @@ class HomeViewState extends State<HomeView> {
         HomeTodoGrid(
           key: const ValueKey('home-todos'),
           children: [
+            ?widget.campusCardReminder,
             for (final (task, more) in preview.take(limit))
               HomeTodoCard(
                 item: task,
@@ -257,19 +261,19 @@ class HomeViewState extends State<HomeView> {
         ),
         // 首次加载才占位；刷新时保留已有结果，进度只在标题栏右侧显示。
         // 还没算出过待办（如启动时等待会话恢复）时同样占位，不先说“没有待办”。
-        if (tasks.isEmpty && !widget.state.projected)
+        if (!hasTodoCards && !widget.state.projected)
           const LoadingPlaceholder(compact: true)
-        else if (tasks.isEmpty &&
+        else if (!hasTodoCards &&
             loading.isNotEmpty &&
             loading.every(
               (f) =>
                   sources[f]?.updatedAt == null && sources[f]?.evidence == null,
             ))
           const LoadingPlaceholder(compact: true)
-        else if (tasks.isEmpty &&
+        else if (!hasTodoCards &&
             features.any((f) => sources[f]?.status == FeatureLoadStatus.idle))
           const SizedBox(height: 120)
-        else if (tasks.isEmpty)
+        else if (!hasTodoCards)
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -413,6 +417,7 @@ class FeatureGridView extends StatelessWidget {
     this.onOpenBhpan,
     this.onOpenFinance,
     this.onOpenCloudPrint,
+    this.onOpenCampusCard,
   });
   final Map<FeatureId, FeatureSnapshot> snapshots;
   final ValueChanged<FeatureId> onFeatureTap;
@@ -425,6 +430,7 @@ class FeatureGridView extends StatelessWidget {
   final VoidCallback? onOpenBhpan;
   final VoidCallback? onOpenFinance;
   final VoidCallback? onOpenCloudPrint;
+  final VoidCallback? onOpenCampusCard;
 
   @override
   Widget build(BuildContext context) => CustomScrollView(
@@ -459,6 +465,13 @@ class FeatureGridView extends StatelessWidget {
 
   Widget _grid() => UiEntryList(
     children: [
+      if (onOpenCampusCard != null)
+        UiEntryCard(
+          title: '校园卡充值',
+          icon: Icons.account_balance_wallet_outlined,
+          subtitle: '使用已绑定的数字人民币钱包充值',
+          onTap: onOpenCampusCard!,
+        ),
       if (onOpenIhome != null)
         UiEntryCard(
           title: 'iHome',

@@ -45,6 +45,7 @@ impl ReqwestTransport {
         let ordinary = |connect_seconds| {
             reqwest::Client::builder()
             .redirect(reqwest::redirect::Policy::none())
+            .retry(reqwest::retry::never())
             // 只协商响应压缩；正文上限继续由流式解压后的累计字节数检查。
             .gzip(true)
             .connect_timeout(std::time::Duration::from_secs(connect_seconds))

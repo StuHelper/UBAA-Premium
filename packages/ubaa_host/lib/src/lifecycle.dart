@@ -27,6 +27,7 @@ class _UbaaAppHostState extends State<UbaaAppHost> with WidgetsBindingObserver {
   UiError? _scheduledHomeFeedback;
   late PlacePreferenceStore _placeStore;
   late ThemePreferenceStore _themeStore;
+  late AccountPreferences<CampusCardSettings> _campusCardPreferences;
   String? _placeOwner;
   Map<String, String> _placePreferences = {};
   String? _preferenceOwner;
@@ -211,6 +212,15 @@ class _UbaaAppHostState extends State<UbaaAppHost> with WidgetsBindingObserver {
             values: preferences,
           );
     _themeStore = ThemePreferenceStore(values: preferences);
+    _campusCardPreferences = AccountPreferences(
+      scope: backend != null || widget.backendFactory != null
+          ? 'synthetic'
+          : defaultConfigDirectory(),
+      kind: 'campus-card',
+      decode: CampusCardSettings.decode,
+      encode: (settings) => settings.encode(),
+      values: preferences,
+    );
     unawaited(_restoreTheme());
     _reminderStore =
         widget.reminderStore ??

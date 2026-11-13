@@ -9,6 +9,27 @@ use super::{
 use crate::error::Result;
 
 impl UbaaClient {
+    /// 恢复航财通所需的 Direct 会话，不修改全局连接方式。
+    ///
+    /// # Errors
+    /// Direct 会话无效或恢复中止时返回带路线的错误。
+    pub async fn recover_campus_card_session_controlled(
+        &mut self,
+        operation: RequiredRecoveryOperation,
+    ) -> RoutedResult<AuthStatus> {
+        self.recover_operation_session_controlled(super::types::Operation::CampusCard, operation)
+            .await
+    }
+
+    /// 核验航财通所需的 Direct 会话。
+    ///
+    /// # Errors
+    /// Direct 会话无效时返回带路线的错误。
+    pub async fn recover_campus_card_session(&mut self) -> RoutedResult<AuthStatus> {
+        let resolution = self.resolve_operation(super::types::Operation::CampusCard)?;
+        self.recover_resolved_session(resolution).await
+    }
+
     /// 重新检测当前网络并核验所需连接；Auto 校外准备 `WebVPN` 会话。
     /// # Errors
     /// 缺少会话、认证或所有权失败保留实际需要的路线。
