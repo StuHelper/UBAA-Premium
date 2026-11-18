@@ -16,7 +16,7 @@ concurrency:
 jobs:
   publish:
     if: github.repository == 'BUAASubnet/UBAA' && (github.event_name == 'release' || github.ref == 'refs/heads/main')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment: release-production
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

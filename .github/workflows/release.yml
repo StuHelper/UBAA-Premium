@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       local_macos:
-        description: 使用本机专用 runner 执行 Apple 作业及 macOS 验收
+        description: 兼容既有调用，Apple 构建使用托管 runner
         type: boolean
         default: false
       tag:
@@ -18,7 +18,7 @@ concurrency:
 jobs:
   metadata:
     if: github.repository == 'BUAASubnet/UBAA' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       version: ${{ steps.release.outputs.version }}
       build: ${{ steps.release.outputs.build }}
@@ -47,7 +47,7 @@ jobs:
     needs:
       - metadata
       - ready
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     environment: release-production
     timeout-minutes: 180
     env: &release_env
@@ -168,9 +168,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-24.04
+          - os: ubuntu-26.04
             arch: x64
-          - os: ubuntu-24.04-arm
+          - os: ubuntu-26.04-arm
             arch: arm64
     if: ${{ !cancelled() && needs.ready.result == 'success' }}
   windows:
@@ -207,7 +207,7 @@ jobs:
     needs:
       - metadata
       - ready
-    runs-on: ${{ inputs.local_macos && 'ubaa-release-macos' || matrix.os }}
+    runs-on: ${{ matrix.os }}
     environment: release-production
     timeout-minutes: 180
     env: *release_env
@@ -261,7 +261,7 @@ jobs:
     needs:
       - metadata
       - ready
-    runs-on: ${{ inputs.local_macos && 'ubaa-release-macos' || 'xcode-27' }}
+    runs-on: xcode-27
     environment: release-production
     timeout-minutes: 180
     env: *release_env
@@ -309,7 +309,7 @@ jobs:
     needs:
       - metadata
       - ready
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     environment: release-production
     timeout-minutes: 180
     env: *release_env
@@ -391,7 +391,7 @@ jobs:
       - macos
       - ios
       - ohos
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment: release-production
     permissions:
       contents: write
@@ -434,7 +434,7 @@ jobs:
     needs:
       - metadata
       - ios
-    runs-on: ${{ inputs.local_macos && 'ubaa-release-macos' || 'xcode-27' }}
+    runs-on: xcode-27
     environment: release-production
     timeout-minutes: 90
     env: *release_env
@@ -466,7 +466,7 @@ jobs:
     needs:
       - metadata
       - ohos
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment: release-production
     timeout-minutes: 90
     env: *release_env
@@ -493,7 +493,7 @@ jobs:
     if: ${{ !cancelled() && needs.ohos.result == 'success' }}
   store-access:
     needs: metadata
-    runs-on: ${{ inputs.local_macos && 'ubaa-release-macos' || 'macos-26' }}
+    runs-on: macos-26
     environment: release-production
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -517,7 +517,7 @@ jobs:
         run: rm -rf .ubaa_local/release/apple_api
   acceptance:
     needs: metadata
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       actions: read
@@ -537,7 +537,7 @@ jobs:
       - acceptance
       - verify
     if: ${{ always() }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: 核对发布验收来源

@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       rust: ${{ steps.paths.outputs.rust }}
       flutter: ${{ steps.paths.outputs.flutter }}
@@ -28,7 +28,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: python3 scripts/check/ci/changes.py
   scripts:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - &checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -57,7 +57,7 @@ jobs:
   rust:
     needs: changes
     if: needs.changes.outputs.rust == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - *checkout
       - uses: ./.github/actions/toolchain
@@ -72,7 +72,7 @@ jobs:
   flutter:
     needs: changes
     if: needs.changes.outputs.flutter == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - *checkout
       - uses: ./.github/actions/toolchain
@@ -86,7 +86,7 @@ jobs:
   worker:
     needs: changes
     if: needs.changes.outputs.worker == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - *checkout
       - id: toolchain
