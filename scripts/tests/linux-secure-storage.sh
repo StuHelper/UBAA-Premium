@@ -25,8 +25,9 @@ if [[ ${1:-} == --keyring-session ]]; then
     --dart-define=UBAA_SECURE_STORAGE_AVAILABLE=true \
     --dart-define=UBAA_SYNTHETIC_SECRET_SERVICE=true
 fi
-mkdir -p "$repo_root/.ubaa_local/linux_secure_storage"
-storage_test_dir=$(mktemp -d "$repo_root/.ubaa_local/linux_secure_storage/session_XXXXXX")
+# A runner workspace with a long repository name can exceed Linux's 107-byte
+# filesystem socket path limit before the keyring daemon appends /runtime/keyring/control.
+storage_test_dir=$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/ubaa-keyring.XXXXXX")
 export UBAA_SYNTHETIC_SECRET_SERVICE_ROOT="$storage_test_dir"
 trap 'rm -rf -- "$storage_test_dir"' EXIT
 export XDG_DATA_HOME="$storage_test_dir/data"

@@ -32,5 +32,11 @@ test("服务器部署包必须实际上传，包含明确选择的隐藏目录�
 });
 
 test("发布工具使用可在 Debian 13 运行的 glibc 基线构建", () => {
-  assert.equal(workflow.jobs.check["runs-on"], "ubuntu-24.04");
+  const job = workflow.jobs.check;
+  assert.equal(job["runs-on"], "ubuntu-26.04");
+  const build = job.steps.find(step => step.run?.includes("cargo build --locked --release -p ubaa-bhpan-publish"));
+  assert.ok(build?.run.includes('rust:${RUST_VERSION}-bookworm'));
+  assert.ok(build.run.includes("readelf --version-info"));
+  assert.ok(build.run.includes("debian:13-slim getconf GNU_LIBC_VERSION"));
+  assert.ok(build.run.includes("dpkg --compare-versions"));
 });

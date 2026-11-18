@@ -40,7 +40,7 @@ concurrency:
 jobs:
   build:
     name: 构建并检查文档
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -68,7 +68,7 @@ jobs:
     name: 部署服务器文档站
     if: github.event_name != 'pull_request' && github.repository == 'BUAASubnet/UBAA' && github.ref_name == 'dev'
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment:
       name: docs-production
       url: https://www.ubaa.top

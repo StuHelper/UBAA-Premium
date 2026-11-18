@@ -1,0 +1,6 @@
+# GitHub-hosted labels introduced after the local actionlint label list.
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04
+    - ubuntu-26.04-arm
+    - xcode-27
