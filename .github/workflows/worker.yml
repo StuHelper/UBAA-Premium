@@ -55,9 +55,18 @@ jobs:
         run: just app-service-content-check
       - name: 检查应用服务合同与 PostgreSQL
         run: just app-service-check
-      - name: 构建云盘发布工具
-        uses: ./.github/actions/toolchain
-      - run: cargo build --locked --release -p ubaa-bhpan-publish
+      - name: 构建兼容 Debian 13 的云盘发布工具
+        shell: bash
+        run: |
+          set -euo pipefail
+          source scripts/tools/versions.env
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/src" -w /src \
+            -e CARGO_HOME=/tmp/cargo -e CARGO_BUILD_JOBS -e CARGO_INCREMENTAL \
+            -e RUSTUP_TOOLCHAIN="$RUST_VERSION" "rust:${RUST_VERSION}-bookworm" \
+            cargo build --locked --release -p ubaa-bhpan-publish
+          required=$(readelf --version-info target/release/bhpan-publish | grep -oE 'GLIBC_[0-9]+(\.[0-9]+)+' | sort -Vu | tail -1)
+          target=$(docker run --rm debian:13-slim getconf GNU_LIBC_VERSION)
+          dpkg --compare-versions "${required#GLIBC_}" le "${target#glibc }"
       - name: 打包服务器应用
         run: |
           node scripts/server/package.mjs
