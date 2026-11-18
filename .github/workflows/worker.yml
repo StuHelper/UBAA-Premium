@@ -61,7 +61,7 @@ jobs:
           set -euo pipefail
           source scripts/tools/versions.env
           docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/src" -w /src \
-            -e CARGO_HOME=/tmp/cargo -e CARGO_BUILD_JOBS -e CARGO_INCREMENTAL \
+            -e CARGO_HOME=/tmp/rust-registry -e CARGO_BUILD_JOBS -e CARGO_INCREMENTAL \
             -e RUSTUP_TOOLCHAIN="$RUST_VERSION" "rust:${RUST_VERSION}-bookworm" \
             cargo build --locked --release -p ubaa-bhpan-publish
           required=$(readelf --version-info target/release/bhpan-publish | grep -oE 'GLIBC_[0-9]+(\.[0-9]+)+' | sort -Vu | tail -1)
